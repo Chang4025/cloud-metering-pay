@@ -71,6 +71,12 @@ export default function App() {
   const handleLogin = (e) => {
     e.preventDefault();
     setIsLoggedIn(true);
+    if (!customerInfo.company) {
+      setCustomerInfo({ ...customerInfo, company: '測試公司' });
+    }
+    if (meters.water === 0 && meters.electricity === 0) {
+      setMeters({ water: 150, electricity: 200 });
+    }
     setCurrentView('client_dashboard');
   };
 
