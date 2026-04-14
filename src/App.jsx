@@ -264,7 +264,7 @@ export default function App() {
 
                 {/* One-time Option */}
                 <div className="border border-slate-200 hover:border-slate-300 rounded-xl p-5 transition-colors">
-                  <h3 className="font-bold text-slate-800 text-lg mb-1">PayPal 訂閱中</h3>
+                  <h3 className="font-bold text-slate-800 text-lg mb-1">PayPal 單次付費</h3>
                   <button onClick={() => simulatePayment('onetime')} className="w-full border border-slate-300 hover:bg-slate-50 text-slate-700 py-3 mt-3 rounded-full font-bold flex items-center justify-center transition-colors">
                     <CreditCard className="mr-2" size={20} /> Checkout with PayPal
                   </button>
