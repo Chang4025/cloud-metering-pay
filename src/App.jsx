@@ -85,6 +85,9 @@ export default function App() {
             electricity: prev.electricity + pendingOrder.electricity
           }));
           setPendingOrder(null);
+        } else if (pendingOrder?.type === 'renew') {
+          setMeters({ water: pendingOrder.water, electricity: pendingOrder.electricity });
+          setPendingOrder(null);
         }
         setCurrentView('success');
         setIsCardFormOpen(false); // 付款成功後重置
@@ -267,9 +270,9 @@ export default function App() {
             <div className="text-sm text-slate-500">{customerInfo.email || 'test@example.com'}</div>
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">{pendingOrder?.type === 'expand' ? '擴充明細' : '訂單摘要'}</h3>
-            <div className="flex justify-between text-sm mb-2 text-slate-700"><span>{pendingOrder?.type === 'expand' ? '新增水表' : '水表'}</span><span>{pendingOrder?.water || 0} 座</span></div>
-            <div className="flex justify-between text-sm mb-4 text-slate-700"><span>{pendingOrder?.type === 'expand' ? '新增電表' : '電表'}</span><span>{pendingOrder?.electricity || 0} 座</span></div>
+            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">{pendingOrder?.type === 'expand' ? '擴充明細' : pendingOrder?.type === 'renew' ? '手動續約' : '訂單摘要'}</h3>
+            <div className="flex justify-between text-sm mb-2 text-slate-700"><span>{pendingOrder?.type === 'expand' ? '新增水表' : pendingOrder?.type === 'renew' ? '新水表設定' : '水表'}</span><span>{pendingOrder?.water || 0} 座</span></div>
+            <div className="flex justify-between text-sm mb-4 text-slate-700"><span>{pendingOrder?.type === 'expand' ? '新增電表' : pendingOrder?.type === 'renew' ? '新電表設定' : '電表'}</span><span>{pendingOrder?.electricity || 0} 座</span></div>
             <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
               <span className="font-bold text-slate-800">總計</span>
               <span className="text-2xl font-bold text-blue-600">${pendingOrder?.cost?.toFixed(2) || '0.00'}</span>
@@ -363,7 +366,7 @@ export default function App() {
       <CheckCircle2 className="mx-auto text-green-500 mb-6" size={80} />
       <h2 className="text-3xl font-bold text-slate-800 mb-4">付款成功！</h2>
       <p className="text-slate-600 mb-8">
-        感謝您的購買。{pendingOrder?.type === 'expand' ? '您的表位擴充已生效！' : '您的企業帳戶已正式開通！'}<br />
+        感謝您的購買。{pendingOrder?.type === 'expand' ? '您的表位擴充已生效！' : pendingOrder?.type === 'renew' ? '您的手動續約已生效！' : '您的企業帳戶已正式開通！'}<br />
         您已完成本年度繳費，請留意明年的續約通知信件。
       </p>
       <button onClick={() => setCurrentView('client_dashboard')} className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 font-bold shadow-lg transition-transform hover:-translate-y-1">
@@ -386,7 +389,7 @@ export default function App() {
           <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
             <div className="font-bold text-slate-800 text-lg border-b border-slate-100 pb-4 mb-4">CloudMeter US</div>
             <div className="flex justify-between text-slate-600 mb-3 text-sm">
-              <span>{pendingOrder?.type === 'expand' ? '擴充明細' : '年度方案'} ({pendingOrder?.water || 0} 水表, {pendingOrder?.electricity || 0} 電表)</span>
+              <span>{pendingOrder?.type === 'expand' ? '擴充明細' : pendingOrder?.type === 'renew' ? '手動續約' : '年度方案'} ({pendingOrder?.water || 0} 水表, {pendingOrder?.electricity || 0} 電表)</span>
               <span>${pendingOrder?.cost?.toFixed(2) || '0.00'}</span>
             </div>
             <div className="flex justify-between font-bold text-slate-800 text-2xl border-t border-slate-100 pt-4 mt-2">
@@ -413,6 +416,9 @@ export default function App() {
                         water: prev.water + pendingOrder.water,
                         electricity: prev.electricity + pendingOrder.electricity
                       }));
+                      setPendingOrder(null);
+                    } else if (pendingOrder?.type === 'renew') {
+                      setMeters({ water: pendingOrder.water, electricity: pendingOrder.electricity });
                       setPendingOrder(null);
                     }
                     setCurrentView('success');
@@ -453,6 +459,9 @@ export default function App() {
                       water: prev.water + pendingOrder.water,
                       electricity: prev.electricity + pendingOrder.electricity
                     }));
+                    setPendingOrder(null);
+                  } else if (pendingOrder?.type === 'renew') {
+                    setMeters({ water: pendingOrder.water, electricity: pendingOrder.electricity });
                     setPendingOrder(null);
                   }
                   setCurrentView('success'); 
@@ -531,7 +540,7 @@ export default function App() {
               </div>
               <div className="text-sm text-slate-500">下次帳單日期：2027-03-16 (剩餘 365 天)</div>
             </div>
-            <button className="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded shadow-sm text-sm font-medium">
+            <button onClick={() => setCurrentView('client_renew')} className="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded shadow-sm text-sm font-medium">
               立即手動續約
             </button>
           </div>
@@ -622,6 +631,107 @@ export default function App() {
       </div>
     </div>
   );
+
+  const ClientRenewView = () => {
+    const [renewMeters, setRenewMeters] = useState({ water: meters.water, electricity: meters.electricity });
+
+    const newAnnualCost = (renewMeters.water * PRICES.water) + (renewMeters.electricity * PRICES.electricity);
+    
+    const diffWater = renewMeters.water - meters.water;
+    const diffElectricity = renewMeters.electricity - meters.electricity;
+
+    const handleRenewSubmit = () => {
+      setPendingOrder({ type: 'renew', water: renewMeters.water, electricity: renewMeters.electricity, cost: newAnnualCost });
+      setCurrentView('checkout');
+      setIsCardFormOpen(false);
+    };
+
+    return (
+      <div className="max-w-4xl mx-auto mt-10 p-6 animate-in fade-in duration-300">
+        <div className="flex items-center mb-6">
+          <button onClick={() => setCurrentView('client_dashboard')} className="text-slate-400 hover:text-slate-800 mr-3 p-1 rounded-full hover:bg-slate-100 transition-colors">
+            <ArrowRight className="transform rotate-180" size={24} />
+          </button>
+          <h1 className="text-2xl font-bold text-slate-800 flex items-center">
+            <RefreshCw className="mr-3 text-slate-400" /> 手動續約設定
+          </h1>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
+            <h2 className="text-lg font-semibold mb-6">請設定下期合約之表位數量</h2>
+
+            <div className="mb-6">
+              <label className="flex items-center text-slate-700 font-medium mb-2">
+                <Droplet className="mr-2 text-blue-500" size={20} /> 水表數量 (Water Meters)
+              </label>
+              <input
+                type="number" min="0"
+                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                value={renewMeters.water}
+                onChange={(e) => setRenewMeters({ ...renewMeters, water: parseInt(e.target.value) || 0 })}
+              />
+              <div className="text-sm mt-2 flex items-center ">
+                <span className="text-slate-500 mr-2">本期: {meters.water} 座</span>
+                {diffWater > 0 && <span className="text-green-600 font-medium">(即將增加 {diffWater} 座)</span>}
+                {diffWater < 0 && <span className="text-orange-600 font-medium">(即將減少 {Math.abs(diffWater)} 座)</span>}
+                {diffWater === 0 && <span className="text-slate-400 font-medium">(與本期無差異)</span>}
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="flex items-center text-slate-700 font-medium mb-2">
+                <Zap className="mr-2 text-yellow-500" size={20} /> 電表數量 (Electric Meters)
+              </label>
+              <input
+                type="number" min="0"
+                className="w-full border border-slate-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                value={renewMeters.electricity}
+                onChange={(e) => setRenewMeters({ ...renewMeters, electricity: parseInt(e.target.value) || 0 })}
+              />
+              <div className="text-sm mt-2 flex items-center">
+                <span className="text-slate-500 mr-2">本期: {meters.electricity} 座</span>
+                {diffElectricity > 0 && <span className="text-green-600 font-medium">(即將增加 {diffElectricity} 座)</span>}
+                {diffElectricity < 0 && <span className="text-orange-600 font-medium">(即將減少 {Math.abs(diffElectricity)} 座)</span>}
+                {diffElectricity === 0 && <span className="text-slate-400 font-medium">(與本期無差異)</span>}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-slate-50 p-8 rounded-xl border border-slate-200 flex flex-col justify-between">
+            <div>
+              <h2 className="text-lg font-semibold mb-6 border-b pb-4">次年度費用預估</h2>
+              
+              <div className="space-y-4 text-slate-700">
+                <div className="flex justify-between">
+                  <span>水表費用 ({renewMeters.water} x ${PRICES.water})</span>
+                  <span>${(renewMeters.water * PRICES.water).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>電表費用 ({renewMeters.electricity} x ${PRICES.electricity})</span>
+                  <span>${(renewMeters.electricity * PRICES.electricity).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-slate-200">
+              <div className="flex justify-between items-end mb-6">
+                <span className="text-lg font-medium text-slate-700">本次應付總額 (USD)</span>
+                <span className="text-4xl font-bold text-blue-600">${newAnnualCost.toFixed(2)}</span>
+              </div>
+              <button
+                onClick={handleRenewSubmit}
+                disabled={newAnnualCost === 0}
+                className={`w-full py-4 rounded-lg font-bold text-lg flex items-center justify-center transition-all ${newAnnualCost > 0 ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+              >
+                確認設定並前往結帳
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const ClientExpandMetersView = () => {
     const [addMeters, setAddMeters] = useState({ water: 0, electricity: 0 });
@@ -1051,6 +1161,7 @@ export default function App() {
       {currentView === 'success' && <SuccessView />}
       {currentView === 'client_dashboard' && <ClientDashboardView />}
       {currentView === 'client_manage_sub' && <ClientManageSubView />}
+      {currentView === 'client_renew' && <ClientRenewView />}
       {currentView === 'client_expand_meters' && <ClientExpandMetersView />}
     </div>
   );
