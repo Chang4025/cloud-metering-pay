@@ -68,6 +68,12 @@ export default function App() {
     setCurrentView('checkout');
   };
 
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setIsLoggedIn(true);
+    setCurrentView('client_dashboard');
+  };
+
   const simulatePayment = (type) => {
     setPaymentType(type);
     if (type === 'credit_card') {
@@ -112,7 +118,10 @@ export default function App() {
             <button onClick={logout} className="flex items-center text-slate-300 hover:text-white transition-colors"><LogOut size={16} className="mr-1" /> 登出</button>
           </>
         ) : (
-          <button onClick={() => setCurrentView('calculator')} className="hover:text-blue-400 transition-colors">方案計算</button>
+          <div className="flex items-center space-x-4">
+            <button onClick={() => setCurrentView('calculator')} className="hover:text-blue-400 transition-colors">方案計算</button>
+            <button onClick={() => setCurrentView('login')} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-sm transition-colors font-medium">登入</button>
+          </div>
         )}
         <div className="h-6 w-px bg-slate-700 mx-2"></div>
         <button onClick={() => setCurrentView('admin_dashboard')} className="bg-slate-800 px-4 py-2 rounded border border-slate-700 hover:bg-slate-700 transition-colors text-blue-300">
@@ -214,7 +223,36 @@ export default function App() {
           註冊並前往付款
         </button>
       </form>
-      <button onClick={() => setCurrentView('calculator')} className="w-full text-center text-slate-500 text-sm mt-4 hover:text-slate-800">返回修改方案</button>
+      <div className="text-center mt-4 mb-2">
+        <span className="text-slate-500 text-sm">已有帳號？ </span>
+        <button onClick={() => setCurrentView('login')} className="text-blue-600 hover:text-blue-700 text-sm font-medium">立即登入</button>
+      </div>
+      <button onClick={() => setCurrentView('calculator')} className="w-full text-center text-slate-500 text-sm mt-2 hover:text-slate-800">返回修改方案</button>
+    </div>
+  );
+
+  const LoginView = () => (
+    <div className="max-w-md mx-auto mt-20 p-8 bg-white rounded-xl shadow-sm border border-slate-200 animate-in fade-in zoom-in-95 duration-300">
+      <h2 className="text-2xl font-bold text-slate-800 mb-2">客戶登入</h2>
+      <p className="text-slate-500 mb-6 text-sm">請輸入您的管理員帳號與密碼以登入系統。</p>
+
+      <form onSubmit={handleLogin} className="space-y-5">
+        <div>
+          <label className="block text-slate-700 font-medium mb-1 text-sm flex items-center"><Mail className="mr-1 text-slate-400" size={16} /> 管理員信箱</label>
+          <input required type="email" className="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-blue-500" placeholder="admin@company.com" value={customerInfo.email || ''} onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })} />
+        </div>
+        <div>
+          <label className="block text-slate-700 font-medium mb-1 text-sm flex items-center"><Lock className="mr-1 text-slate-400" size={16} /> 密碼</label>
+          <input required type="password" className="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-blue-500" placeholder="••••••••" />
+        </div>
+        <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-bold transition-colors mt-4 shadow-sm">
+          登入
+        </button>
+      </form>
+      <div className="text-center mt-4">
+        <span className="text-slate-500 text-sm">還沒有帳號？ </span>
+        <button onClick={() => setCurrentView('register')} className="text-blue-600 hover:text-blue-700 text-sm font-medium">免費註冊</button>
+      </div>
     </div>
   );
 
@@ -1007,6 +1045,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 font-sans pb-20">
       <Navbar />
       {currentView === 'calculator' && CalculatorView()}
+      {currentView === 'login' && LoginView()}
       {currentView === 'register' && RegisterView()}
       {currentView === 'checkout' && <CheckoutView />}
       {currentView === 'success' && <SuccessView />}
