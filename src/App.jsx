@@ -708,6 +708,15 @@ export default function App() {
             <div>
               <h2 className="text-lg font-semibold mb-6 border-b pb-4">次年度費用預估</h2>
               
+              <div className="bg-blue-50 text-blue-800 p-4 rounded-lg text-sm mb-6 flex items-start border border-blue-100">
+                <CalendarDays size={18} className="mr-2 mt-0.5 flex-shrink-0" />
+                <div>
+                  本次續約期間為：<strong>2027-03-16 至 2028-03-16</strong>。<br />
+                  此設定將在下期合約開始時正式生效，並依新設定的表位數量計費。
+                </div>
+              </div>
+
+
               <div className="space-y-4 text-slate-700">
                 <div className="flex justify-between">
                   <span>水表費用 ({renewMeters.water} x ${PRICES.water})</span>
