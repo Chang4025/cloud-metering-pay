@@ -118,7 +118,7 @@ export default function App() {
     <nav className="bg-slate-900 text-white p-4 flex justify-between items-center shadow-md relative z-10">
       <div className="flex items-center space-x-2 font-bold text-xl cursor-pointer" onClick={() => setCurrentView('calculator')}>
         <LayoutDashboard className="text-blue-400" />
-        <span>CloudMeter US</span>
+        <span>Cloud Metering</span>
       </div>
       <div className="space-x-4 text-sm font-medium flex items-center">
         {isLoggedIn ? (
@@ -217,11 +217,11 @@ export default function App() {
 
       <form onSubmit={handleRegister} className="space-y-5">
         <div>
-          <label className="block text-slate-700 font-medium mb-1 text-sm flex items-center"><Building2 className="mr-1 text-slate-400" size={16} /> 公司名稱</label>
+          <label className="block text-slate-700 font-medium mb-1 text-sm flex items-center"><Building2 className="mr-1 text-slate-400" size={16} /> 客戶/公司名稱</label>
           <input required type="text" className="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-blue-500" placeholder="Company LLC" value={customerInfo.company} onChange={(e) => setCustomerInfo({ ...customerInfo, company: e.target.value })} />
         </div>
         <div>
-          <label className="block text-slate-700 font-medium mb-1 text-sm flex items-center"><Mail className="mr-1 text-slate-400" size={16} /> 管理員信箱</label>
+          <label className="block text-slate-700 font-medium mb-1 text-sm flex items-center"><Mail className="mr-1 text-slate-400" size={16} /> 信箱</label>
           <input required type="email" className="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-blue-500" placeholder="admin@company.com" value={customerInfo.email} onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })} />
         </div>
         <div>
@@ -247,7 +247,7 @@ export default function App() {
 
       <form onSubmit={handleLogin} className="space-y-5">
         <div>
-          <label className="block text-slate-700 font-medium mb-1 text-sm flex items-center"><Mail className="mr-1 text-slate-400" size={16} /> 管理員信箱</label>
+          <label className="block text-slate-700 font-medium mb-1 text-sm flex items-center"><Mail className="mr-1 text-slate-400" size={16} /> 信箱</label>
           <input required type="email" className="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-blue-500" placeholder="admin@company.com" value={customerInfo.email || ''} onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })} />
         </div>
         <div>
@@ -328,7 +328,7 @@ export default function App() {
         <div className="md:w-1/3">
           <div className="text-2xl text-slate-800 mb-6">訂單摘要</div>
           <div className="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-            <div className="font-bold text-slate-800 text-lg border-b border-slate-100 pb-4 mb-4">CloudMeter US</div>
+            <div className="font-bold text-slate-800 text-lg border-b border-slate-100 pb-4 mb-4">Cloud Metering</div>
             <div className="flex justify-between text-slate-600 mb-3 text-sm">
               <span>{pendingOrder?.type === 'expand' ? '擴充明細' : pendingOrder?.type === 'renew' ? '手動續約' : '年度方案'} ({pendingOrder?.water || 0} 水表, {pendingOrder?.electricity || 0} 電表)</span>
               <span>${pendingOrder?.cost?.toFixed(2) || '0.00'}</span>
@@ -381,7 +381,7 @@ export default function App() {
                 </button>
 
                 <button onClick={() => setCurrentView('checkout')} className="text-sm text-[#0070BA] hover:underline font-medium">
-                  取消並回到 CloudMeter US
+                  取消並回到 Cloud Metering
                 </button>
               </>
             ) : (
@@ -614,8 +614,8 @@ export default function App() {
               />
               <div className="text-sm mt-2 flex items-center ">
                 <span className="text-slate-500 mr-2">本期: {meters.water} 座</span>
-                {diffWater > 0 && <span className="text-green-600 font-medium">(即將增加 {diffWater} 座)</span>}
-                {diffWater < 0 && <span className="text-orange-600 font-medium">(即將減少 {Math.abs(diffWater)} 座)</span>}
+                {diffWater > 0 && <span className="text-green-600 font-medium">(增加 {diffWater} 座)</span>}
+                {diffWater < 0 && <span className="text-orange-600 font-medium">(減少 {Math.abs(diffWater)} 座)</span>}
                 {diffWater === 0 && <span className="text-slate-400 font-medium">(與本期無差異)</span>}
               </div>
             </div>
@@ -632,8 +632,8 @@ export default function App() {
               />
               <div className="text-sm mt-2 flex items-center">
                 <span className="text-slate-500 mr-2">本期: {meters.electricity} 座</span>
-                {diffElectricity > 0 && <span className="text-green-600 font-medium">(即將增加 {diffElectricity} 座)</span>}
-                {diffElectricity < 0 && <span className="text-orange-600 font-medium">(即將減少 {Math.abs(diffElectricity)} 座)</span>}
+                {diffElectricity > 0 && <span className="text-green-600 font-medium">(增加 {diffElectricity} 座)</span>}
+                {diffElectricity < 0 && <span className="text-orange-600 font-medium">(減少 {Math.abs(diffElectricity)} 座)</span>}
                 {diffElectricity === 0 && <span className="text-slate-400 font-medium">(與本期無差異)</span>}
               </div>
             </div>
@@ -926,7 +926,7 @@ export default function App() {
             </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
-              <input type="text" placeholder="搜尋公司名稱或信箱..." className="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 w-64 shadow-sm" />
+              <input type="text" placeholder="搜尋客戶/公司名稱或信箱..." className="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 w-64 shadow-sm" />
             </div>
           </div>
         </div>

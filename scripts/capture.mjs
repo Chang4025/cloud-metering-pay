@@ -1,4 +1,8 @@
 import puppeteer from 'puppeteer';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
 (async () => {
@@ -7,12 +11,13 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
   await page.setViewport({ width: 1280, height: 800 });
 
   console.log('Navigating to app...');
-  await page.goto('http://localhost:5173/cloud-metering-pay/');
+  const IMG_DIR = '../docs/images/';
+  await page.goto('http://localhost:5174/cloud-metering-pay/');
   await delay(1000);
 
   // 1. Calculator
   console.log('Taking screenshot 1...');
-  await page.screenshot({ path: '1_calculator.png' });
+  await page.screenshot({ path: path.join(__dirname, IMG_DIR, '1_calculator.png') });
 
   // Type numbers
   const inputs = await page.$$('input[type="number"]');
@@ -30,7 +35,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 
   // 2. Register
   console.log('Taking screenshot 2...');
-  await page.screenshot({ path: '2_register.png' });
+  await page.screenshot({ path: path.join(__dirname, IMG_DIR, '2_register.png') });
 
   // Fill register
   const textInputs = await page.$$('input[type="text"]');
@@ -48,23 +53,23 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 
   // 3. Checkout
   console.log('Taking screenshot 3...');
-  await page.screenshot({ path: '3_checkout.png' });
+  await page.screenshot({ path: path.join(__dirname, IMG_DIR, '3_checkout.png') });
 
   // Go to client dashboard directly by clicking 登入 or simulating
   // Actually, wait, going back to calculator then login
-  await page.goto('http://localhost:5173/cloud-metering-pay/');
+  await page.goto('http://localhost:5174/cloud-metering-pay/');
   await delay(500);
   const [loginTabBtn] = await page.$$("::-p-xpath(//button[contains(., '登入')])");
   if (loginTabBtn) {
     await loginTabBtn.click();
     await delay(500);
   }
-  
+
   const emailsLogin = await page.$$('input[type="email"]');
   if (emailsLogin.length > 0) await emailsLogin[0].type('admin@test.com');
   const passesLogin = await page.$$('input[type="password"]');
   if (passesLogin.length > 0) await passesLogin[0].type('password123');
-  
+
   const [loginSubmit] = await page.$$("::-p-xpath(//button[contains(., '登入') and @type='submit'])");
   if (loginSubmit) {
     await loginSubmit.click();
@@ -73,7 +78,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
 
   // 4. Client Dashboard
   console.log('Taking screenshot 4...');
-  await page.screenshot({ path: '4_client_dashboard.png' });
+  await page.screenshot({ path: path.join(__dirname, IMG_DIR, '4_client_dashboard.png') });
 
   // Click 擴充表位數量
   const [expandBtn] = await page.$$("::-p-xpath(//span[contains(., '擴充表位數量')])");
@@ -82,7 +87,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
     await parentBtn.asElement().click();
     await delay(1000);
     console.log('Taking screenshot 5...');
-    await page.screenshot({ path: '5_expand.png' });
+    await page.screenshot({ path: path.join(__dirname, IMG_DIR, '5_expand.png') });
   }
 
   // Click 立即手動續約
@@ -98,7 +103,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
     await renewBtn.click();
     await delay(1000);
     console.log('Taking screenshot 6...');
-    await page.screenshot({ path: '6_renew.png' });
+    await page.screenshot({ path: path.join(__dirname, IMG_DIR, '6_renew.png') });
   }
 
   // Admin dashboard
@@ -107,7 +112,7 @@ const delay = ms => new Promise(res => setTimeout(res, ms));
     await adminSwitch.click();
     await delay(1000);
     console.log('Taking screenshot 7...');
-    await page.screenshot({ path: '7_admin.png' });
+    await page.screenshot({ path: path.join(__dirname, IMG_DIR, '7_admin.png') });
   }
 
   await browser.close();
