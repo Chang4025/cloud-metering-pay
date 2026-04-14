@@ -157,7 +157,7 @@ export default function App() {
 
           <div className="mb-6">
             <label className="flex items-center text-slate-700 font-medium mb-2">
-              <Droplet className="mr-2 text-blue-500" size={20} /> 水表數量 (Water Meters)
+              <Droplet className="mr-2 text-blue-500" size={20} /> 水表數量
             </label>
             <input
               type="number" min="0"
@@ -170,7 +170,7 @@ export default function App() {
 
           <div className="mb-6">
             <label className="flex items-center text-slate-700 font-medium mb-2">
-              <Zap className="mr-2 text-yellow-500" size={20} /> 電表數量 (Electric Meters)
+              <Zap className="mr-2 text-yellow-500" size={20} /> 電表數量
             </label>
             <input
               type="number" min="0"
@@ -258,10 +258,7 @@ export default function App() {
           登入
         </button>
       </form>
-      <div className="text-center mt-4">
-        <span className="text-slate-500 text-sm">還沒有帳號？ </span>
-        <button onClick={() => setCurrentView('register')} className="text-blue-600 hover:text-blue-700 text-sm font-medium">免費註冊</button>
-      </div>
+
     </div>
   );
 
@@ -277,8 +274,8 @@ export default function App() {
           </div>
           <div>
             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">{pendingOrder?.type === 'expand' ? '擴充明細' : pendingOrder?.type === 'renew' ? '手動續約' : '訂單摘要'}</h3>
-            <div className="flex justify-between text-sm mb-2 text-slate-700"><span>{pendingOrder?.type === 'expand' ? '新增水表' : pendingOrder?.type === 'renew' ? '新水表設定' : '水表'}</span><span>{pendingOrder?.water || 0} 座</span></div>
-            <div className="flex justify-between text-sm mb-4 text-slate-700"><span>{pendingOrder?.type === 'expand' ? '新增電表' : pendingOrder?.type === 'renew' ? '新電表設定' : '電表'}</span><span>{pendingOrder?.electricity || 0} 座</span></div>
+            <div className="flex justify-between text-sm mb-2 text-slate-700"><span>{pendingOrder?.type === 'expand' ? '新增水表' : pendingOrder?.type === 'renew' ? '水表' : '水表'}</span><span>{pendingOrder?.water || 0} 座</span></div>
+            <div className="flex justify-between text-sm mb-4 text-slate-700"><span>{pendingOrder?.type === 'expand' ? '新增電表' : pendingOrder?.type === 'renew' ? '電表' : '電表'}</span><span>{pendingOrder?.electricity || 0} 座</span></div>
             <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
               <span className="font-bold text-slate-800">總計</span>
               <span className="text-2xl font-bold text-blue-600">${pendingOrder?.cost?.toFixed(2) || '0.00'}</span>
@@ -286,81 +283,19 @@ export default function App() {
           </div>
         </div>
 
-        <div className="md:w-2/3 p-8">
-          {!isCardFormOpen ? (
-            <>
-              <h2 className="text-2xl font-bold text-slate-800 mb-6">選擇您的付款方式</h2>
-
-              <div className="space-y-4">
-                {/* 信用卡付款 */}
-                <div className="border border-slate-200 hover:border-slate-300 rounded-xl p-5 transition-colors">
-                  <h3 className="font-bold text-slate-800 text-lg mb-1">信用卡 / 簽帳金融卡</h3>
-                  <p className="text-sm text-slate-500 mb-4">支援 Visa, Mastercard, JCB 等主要發卡機構，透過安全加密通道處理。</p>
-                  <button onClick={() => setIsCardFormOpen(true)} className="w-full bg-slate-800 hover:bg-slate-900 text-white py-3 rounded-full font-bold flex items-center justify-center transition-colors">
-                    <CreditCard className="mr-2" size={20} /> 輸入信用卡資訊
-                  </button>
-                </div>
-
-                <div className="relative py-2 flex items-center">
-                  <div className="flex-grow border-t border-slate-200"></div>
-                  <span className="flex-shrink-0 mx-4 text-slate-400 text-sm">或使用其他方式</span>
-                  <div className="flex-grow border-t border-slate-200"></div>
-                </div>
-
-
-
-                {/* One-time Option */}
-                <div className="border border-slate-200 hover:border-slate-300 rounded-xl p-5 transition-colors">
-                  <h3 className="font-bold text-slate-800 text-lg mb-1">PayPal 單次付費</h3>
-                  <button onClick={() => simulatePayment('onetime')} className="w-full border border-slate-300 hover:bg-slate-50 text-slate-700 py-3 mt-3 rounded-full font-bold flex items-center justify-center transition-colors">
-                    <CreditCard className="mr-2" size={20} /> Checkout with PayPal
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="animate-in slide-in-from-right-4 duration-300">
-              <div className="flex items-center mb-6">
-                <button onClick={() => setIsCardFormOpen(false)} className="text-slate-400 hover:text-slate-800 mr-3 p-1 rounded-full hover:bg-slate-100 transition-colors">
-                  <ArrowRight className="transform rotate-180" size={24} />
-                </button>
-                <h2 className="text-2xl font-bold text-slate-800">輸入信用卡資訊</h2>
-              </div>
-
-              <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); simulatePayment('credit_card'); }}>
-                <div>
-                  <label className="block text-slate-700 text-sm font-medium mb-1">持卡人姓名</label>
-                  <input required type="text" className="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-blue-500" placeholder="John Doe" />
-                </div>
-                <div>
-                  <label className="block text-slate-700 text-sm font-medium mb-1">信用卡卡號</label>
-                  <div className="relative">
-                    <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={18} />
-                    <input required type="text" maxLength="19" className="w-full border border-slate-300 rounded-lg pl-10 p-3 outline-none focus:border-blue-500 font-mono" placeholder="0000 0000 0000 0000" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-slate-700 text-sm font-medium mb-1">有效期限</label>
-                    <input required type="text" maxLength="5" className="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-blue-500 font-mono" placeholder="MM/YY" />
-                  </div>
-                  <div>
-                    <label className="block text-slate-700 text-sm font-medium mb-1">安全碼 (CVC)</label>
-                    <input required type="text" maxLength="4" className="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-blue-500 font-mono" placeholder="123" />
-                  </div>
-                </div>
-
-                <div className="bg-slate-50 p-4 rounded-lg flex items-start mt-6 border border-slate-200">
-                  <Lock className="text-green-600 mr-3 mt-0.5 flex-shrink-0" size={18} />
-                  <p className="text-xs text-slate-500 leading-relaxed">您的交易受到 256 位元 SSL 加密保護。我們不會在伺服器上儲存您的完整信用卡資訊。</p>
-                </div>
-
-                <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-lg font-bold text-lg transition-colors mt-2 shadow-lg flex justify-center items-center">
-                  確認付款 ${pendingOrder?.cost?.toFixed(2) || '0.00'}
-                </button>
-              </form>
+        <div className="md:w-2/3 p-12 flex flex-col justify-center items-center bg-white">
+          <div className="max-w-sm w-full text-center">
+            <div className="bg-[#0070BA]/10 text-[#0070BA] rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <CreditCard size={36} />
             </div>
-          )}
+            <h2 className="text-3xl font-bold text-slate-800 mb-4">完成付款手續</h2>
+            <p className="text-slate-500 mb-10 leading-relaxed">我們採用 PayPal 作為安全交易閘道，支援各國信用卡與 PayPal 餘額等多種付款方式進行結帳。</p>
+
+            <button onClick={() => simulatePayment('onetime')} className="w-full bg-[#0070BA] hover:bg-[#005EA6] text-white py-4 rounded-full font-bold text-lg flex items-center justify-center transition-transform hover:-translate-y-1 shadow-lg shadow-[#0070BA]/30">
+              前往 PayPal 付款
+            </button>
+            <p className="text-xs text-slate-400 mt-5">您即將被導向至 PayPal 交易頁面，在安全環境中選擇慣用支付方式。</p>
+          </div>
         </div>
 
       </div>
@@ -458,8 +393,8 @@ export default function App() {
                   <h2 className="text-2xl font-semibold text-slate-800">以訪客身分結帳</h2>
                 </div>
 
-                <form className="space-y-4" onSubmit={(e) => { 
-                  e.preventDefault(); 
+                <form className="space-y-4" onSubmit={(e) => {
+                  e.preventDefault();
                   if (pendingOrder?.type === 'expand') {
                     setMeters(prev => ({
                       water: prev.water + pendingOrder.water,
@@ -470,8 +405,8 @@ export default function App() {
                     setMeters({ water: pendingOrder.water, electricity: pendingOrder.electricity });
                     setPendingOrder(null);
                   }
-                  setCurrentView('success'); 
-                  setIsCardFormOpen(false); 
+                  setCurrentView('success');
+                  setIsCardFormOpen(false);
                 }}>
                   <div className="text-sm font-bold text-slate-700 border-b border-slate-200 pb-2 mb-4">帳單地址與卡片資訊</div>
 
@@ -642,7 +577,7 @@ export default function App() {
     const [renewMeters, setRenewMeters] = useState({ water: meters.water, electricity: meters.electricity });
 
     const newAnnualCost = (renewMeters.water * PRICES.water) + (renewMeters.electricity * PRICES.electricity);
-    
+
     const diffWater = renewMeters.water - meters.water;
     const diffElectricity = renewMeters.electricity - meters.electricity;
 
@@ -653,7 +588,7 @@ export default function App() {
     };
 
     return (
-      <div className="max-w-4xl mx-auto mt-10 p-6 animate-in fade-in duration-300">
+      <div className="max-w-5xl mx-auto mt-10 p-6 animate-in fade-in duration-300">
         <div className="flex items-center mb-6">
           <button onClick={() => setCurrentView('client_dashboard')} className="text-slate-400 hover:text-slate-800 mr-3 p-1 rounded-full hover:bg-slate-100 transition-colors">
             <ArrowRight className="transform rotate-180" size={24} />
@@ -707,7 +642,7 @@ export default function App() {
           <div className="bg-slate-50 p-8 rounded-xl border border-slate-200 flex flex-col justify-between">
             <div>
               <h2 className="text-lg font-semibold mb-6 border-b pb-4">次年度費用預估</h2>
-              
+
               <div className="bg-blue-50 text-blue-800 p-4 rounded-lg text-sm mb-6 flex items-start border border-blue-100">
                 <CalendarDays size={18} className="mr-2 mt-0.5 flex-shrink-0" />
                 <div>
@@ -933,7 +868,7 @@ export default function App() {
 
   const AdminCustomersView = () => {
     const [statusFilter, setStatusFilter] = useState('全部');
-    
+
     const customersData = [
       ...(isLoggedIn ? [{
         company: customerInfo.company || '測試公司',
@@ -965,8 +900,8 @@ export default function App() {
       }
     ];
 
-    const filteredCustomers = statusFilter === '全部' 
-      ? customersData 
+    const filteredCustomers = statusFilter === '全部'
+      ? customersData
       : customersData.filter(c => c.status === statusFilter);
 
     return (
@@ -979,7 +914,7 @@ export default function App() {
           <div className="flex flex-col items-end space-y-3">
             <div className="flex items-center space-x-2 w-64 justify-between bg-white px-3 py-1.5 rounded-lg border border-slate-300 shadow-sm">
               <span className="text-sm text-slate-500 font-medium">狀態篩選</span>
-              <select 
+              <select
                 className="text-sm outline-none bg-transparent text-slate-800 cursor-pointer flex-1 text-right"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
@@ -1101,23 +1036,22 @@ export default function App() {
             <div className="flex justify-between items-center mb-5">
               <span className="text-slate-600 flex items-center"><CalendarDays size={18} className="mr-2 text-slate-400" />下次付款日</span>
               <span className="font-bold text-slate-800">
-                {selectedCustomer.date === 'Just Now' ? '2027-04-14' : 
-                 selectedCustomer.date === '2026-03-16' ? '2027-03-16' : 
-                 '已過期'}
+                {selectedCustomer.date === 'Just Now' ? '2027-04-14' :
+                  selectedCustomer.date === '2026-03-16' ? '2027-03-16' :
+                    '已過期'}
               </span>
             </div>
-            <button 
+            <button
               onClick={handleSendEmail}
               disabled={emailStatus !== 'idle'}
-              className={`w-full py-2.5 rounded-lg flex items-center justify-center font-medium transition-colors ${
-                emailStatus === 'idle' ? 'bg-blue-50 text-blue-600 hover:bg-blue-100' :
+              className={`w-full py-2.5 rounded-lg flex items-center justify-center font-medium transition-colors ${emailStatus === 'idle' ? 'bg-blue-50 text-blue-600 hover:bg-blue-100' :
                 emailStatus === 'sending' ? 'bg-slate-100 text-slate-500 cursor-not-allowed' :
-                'bg-green-50 text-green-600'
-              }`}
+                  'bg-green-50 text-green-600'
+                }`}
             >
               <Mail size={16} className="mr-2" />
               {emailStatus === 'idle' ? '寄送續約提醒 Email' :
-               emailStatus === 'sending' ? '寄送中...' : '已寄出提醒'}
+                emailStatus === 'sending' ? '寄送中...' : '已寄出提醒'}
             </button>
           </div>
         </div>
