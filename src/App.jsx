@@ -196,9 +196,17 @@ export default function App() {
           </div>
 
           <div className="mt-8 pt-6 border-t border-slate-200">
-            <div className="flex justify-between items-end mb-6">
-              <span className="text-lg font-medium text-slate-700">小計 (USD/年)</span>
-              <span className="text-4xl font-bold text-blue-600">${totalCost}</span>
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-slate-700 font-medium">小計 (Subtotal)</span>
+              <span className="font-bold text-slate-800">${totalCost.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-center mb-4 text-sm">
+              <span className="text-slate-500">銷售稅 ({(taxRate * 100).toFixed(1)}%)</span>
+              <span className="font-medium text-slate-500">${(totalCost * taxRate).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-end mb-6 pt-4 border-t border-slate-100">
+              <span className="text-lg font-medium text-slate-700">總計 (USD/年)</span>
+              <span className="text-4xl font-bold text-blue-600">${(totalCost * (1 + taxRate)).toFixed(2)}</span>
             </div>
             <button
               onClick={handleProceedToCheckout}
