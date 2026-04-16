@@ -22,7 +22,9 @@ import {
   Settings,
   History,
   AlertCircle,
-  CalendarDays
+  CalendarDays,
+  Send,
+  Clock
 } from 'lucide-react';
 
 const PRICES = {
@@ -47,6 +49,7 @@ export default function App() {
 
   const [meters, setMeters] = useState({ water: 0, electricity: 0 });
   const [customerInfo, setCustomerInfo] = useState({ company: '', email: '', password: '' });
+  const [taxRate, setTaxRate] = useState(0.05);
 
   const totalCost = (meters.water * PRICES.water) + (meters.electricity * PRICES.electricity);
 
@@ -188,13 +191,13 @@ export default function App() {
             <div className="space-y-4 text-slate-700">
               <div className="flex justify-between"><span>水表 ({meters.water} 座)</span><span>${meters.water * PRICES.water}</span></div>
               <div className="flex justify-between"><span>電表 ({meters.electricity} 座)</span><span>${meters.electricity * PRICES.electricity}</span></div>
-              <div className="flex justify-between text-sm text-slate-500 pt-2"><span>系統整合與客服支援</span><span>免費包含</span></div>
+              <div className="flex justify-between text-sm text-slate-500 pt-2"><span>系統整合與客服支援</span><span>費用已含</span></div>
             </div>
           </div>
 
           <div className="mt-8 pt-6 border-t border-slate-200">
             <div className="flex justify-between items-end mb-6">
-              <span className="text-lg font-medium text-slate-700">總計 (USD/年)</span>
+              <span className="text-lg font-medium text-slate-700">小計 (USD/年)</span>
               <span className="text-4xl font-bold text-blue-600">${totalCost}</span>
             </div>
             <button
@@ -262,7 +265,12 @@ export default function App() {
     </div>
   );
 
-  const CheckoutView = () => (
+  const CheckoutView = () => {
+    const subtotal = pendingOrder?.cost || 0;
+    const taxAmount = subtotal * taxRate;
+    const finalTotal = subtotal + taxAmount;
+
+    return (
     <div className="max-w-4xl mx-auto mt-12 p-6 animate-in fade-in slide-in-from-right-8 duration-500">
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col md:flex-row">
 
@@ -276,9 +284,19 @@ export default function App() {
             <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">{pendingOrder?.type === 'expand' ? '擴充明細' : pendingOrder?.type === 'renew' ? '手動續約' : '訂單摘要'}</h3>
             <div className="flex justify-between text-sm mb-2 text-slate-700"><span>{pendingOrder?.type === 'expand' ? '新增水表' : pendingOrder?.type === 'renew' ? '水表' : '水表'}</span><span>{pendingOrder?.water || 0} 座</span></div>
             <div className="flex justify-between text-sm mb-4 text-slate-700"><span>{pendingOrder?.type === 'expand' ? '新增電表' : pendingOrder?.type === 'renew' ? '電表' : '電表'}</span><span>{pendingOrder?.electricity || 0} 座</span></div>
-            <div className="pt-4 border-t border-slate-200 flex justify-between items-center">
-              <span className="font-bold text-slate-800">總計</span>
-              <span className="text-2xl font-bold text-blue-600">${pendingOrder?.cost?.toFixed(2) || '0.00'}</span>
+            <div className="pt-4 border-t border-slate-200">
+              <div className="flex justify-between items-center mb-2 text-slate-700">
+                <span>訂閱費 (Subtotal)</span>
+                <span>${subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center mb-4 text-slate-700">
+                <span>銷售稅 ({(taxRate * 100).toFixed(1)}%)</span>
+                <span>${taxAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center pt-3 border-t border-slate-100">
+                <span className="font-bold text-slate-800">總計</span>
+                <span className="text-2xl font-bold text-blue-600">${finalTotal.toFixed(2)}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -300,7 +318,8 @@ export default function App() {
 
       </div>
     </div>
-  );
+    );
+  };
 
   const SuccessView = () => (
     <div className="max-w-md mx-auto mt-24 text-center animate-in fade-in zoom-in duration-500">
@@ -316,7 +335,12 @@ export default function App() {
     </div>
   );
 
-  const PayPalSimulationView = () => (
+  const PayPalSimulationView = () => {
+    const subtotal = pendingOrder?.cost || 0;
+    const taxAmount = subtotal * taxRate;
+    const finalTotal = subtotal + taxAmount;
+
+    return (
     <div className="min-h-screen bg-[#F5F7FA] flex flex-col items-center pt-12 pb-12 font-sans animate-in fade-in duration-300">
       {/* PayPal Header */}
       <div className="w-full max-w-5xl flex justify-center mb-10">
@@ -331,11 +355,19 @@ export default function App() {
             <div className="font-bold text-slate-800 text-lg border-b border-slate-100 pb-4 mb-4">Cloud Metering</div>
             <div className="flex justify-between text-slate-600 mb-3 text-sm">
               <span>{pendingOrder?.type === 'expand' ? '擴充明細' : pendingOrder?.type === 'renew' ? '手動續約' : '年度方案'} ({pendingOrder?.water || 0} 水表, {pendingOrder?.electricity || 0} 電表)</span>
-              <span>${pendingOrder?.cost?.toFixed(2) || '0.00'}</span>
+              <span></span>
+            </div>
+            <div className="flex justify-between text-slate-600 mb-2 text-sm">
+              <span>訂閱費 (Subtotal)</span>
+              <span>${subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-slate-600 mb-4 text-sm">
+              <span>銷售稅 ({(taxRate * 100).toFixed(1)}%)</span>
+              <span>${taxAmount.toFixed(2)}</span>
             </div>
             <div className="flex justify-between font-bold text-slate-800 text-2xl border-t border-slate-100 pt-4 mt-2">
               <span>總計</span>
-              <span>${pendingOrder?.cost?.toFixed(2) || '0.00'} <span className="text-sm font-normal text-slate-500">USD</span></span>
+              <span>${finalTotal.toFixed(2)} <span className="text-sm font-normal text-slate-500">USD</span></span>
             </div>
 
           </div>
@@ -445,7 +477,8 @@ export default function App() {
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   const ClientDashboardView = () => (
     <div className="max-w-5xl mx-auto mt-10 p-6 animate-in fade-in duration-300">
@@ -795,7 +828,9 @@ export default function App() {
         <button onClick={() => setCurrentView('admin_customers')} className={`w-full flex items-center p-3 rounded-lg transition-colors ${currentView === 'admin_customers' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800 hover:text-white'}`}>
           <Users className="mr-3" size={20} /> 客戶管理
         </button>
-
+        <button onClick={() => setCurrentView('admin_settings')} className={`w-full flex items-center p-3 rounded-lg transition-colors ${currentView === 'admin_settings' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800 hover:text-white'}`}>
+          <Settings className="mr-3" size={20} /> 系統設定
+        </button>
       </div>
 
       <button onClick={() => setCurrentView(isLoggedIn ? 'client_dashboard' : 'calculator')} className="text-slate-500 hover:text-white text-sm mt-auto flex items-center border-t border-slate-800 pt-4">
@@ -846,7 +881,7 @@ export default function App() {
               <tr className="border-b border-slate-100 bg-blue-50/50">
                 <td className="p-4 font-bold text-blue-800">{customerInfo.company || '測試公司'} <span className="text-xs bg-blue-100 text-blue-600 px-2 py-0.5 rounded ml-2">最新</span></td>
                 <td className="p-4 text-slate-600">{meters.water} 水表, {meters.electricity} 電表</td>
-                <td className="p-4 text-slate-800 font-bold">${totalCost}</td>
+                <td className="p-4 text-slate-800 font-bold">${(totalCost * (1 + taxRate)).toFixed(2)}</td>
                 <td className="p-4"><span className="bg-slate-200 text-slate-700 px-2 py-1 rounded-full text-xs font-medium">{paymentType === 'credit_card' ? '線上刷卡' : '訂閱中'}</span></td>
                 <td className="p-4 text-slate-500">Just Now</td>
               </tr>
@@ -854,7 +889,7 @@ export default function App() {
             <tr className="border-b border-slate-100 hover:bg-slate-50">
               <td className="p-4 font-medium text-slate-800">Texas Real Estate LLC</td>
               <td className="p-4 text-slate-600">150 水表, 200 電表</td>
-              <td className="p-4 text-slate-800">$4,800</td>
+              <td className="p-4 text-slate-800">${(4800 * (1 + taxRate)).toFixed(2)}</td>
               <td className="p-4"><span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">訂閱中</span></td>
               <td className="p-4 text-slate-500">2026-03-16</td>
             </tr>
@@ -868,9 +903,20 @@ export default function App() {
 
   const AdminCustomersView = () => {
     const [statusFilter, setStatusFilter] = useState('全部');
+    const [selectedCustomerIds, setSelectedCustomerIds] = useState([]);
+    const [emailStatus, setEmailStatus] = useState('idle');
+    const [showScheduleModal, setShowScheduleModal] = useState(false);
+    const [scheduleStatus, setScheduleStatus] = useState('idle');
+    const [scheduleType, setScheduleType] = useState('quick');
+    const [quickSchedule, setQuickSchedule] = useState('tomorrow_0900');
+    const [customDate, setCustomDate] = useState('');
+    const [customTime, setCustomTime] = useState('');
+    const [scheduleError, setScheduleError] = useState('');
+    const [scheduledEmails, setScheduledEmails] = useState({});
 
     const customersData = [
       ...(isLoggedIn ? [{
+        id: 'c1',
         company: customerInfo.company || '測試公司',
         email: customerInfo.email || '未提供',
         water: meters.water,
@@ -878,25 +924,30 @@ export default function App() {
         cost: totalCost,
         status: '訂閱中',
         date: 'Just Now',
+        expiryDate: '2027-04-16',
         isCurrent: true
       }] : []),
       {
+        id: 'c2',
         company: 'Texas Real Estate LLC',
         email: 'admin@texasre.com',
         water: 150,
         electricity: 200,
         cost: 4800,
         status: '訂閱中',
-        date: '2026-03-16'
+        date: '2026-03-16',
+        expiryDate: '2027-03-16'
       },
       {
+        id: 'c3',
         company: 'Florida Housing',
         email: 'ops@floridahousing.org',
         water: 85,
         electricity: 0,
         cost: 1020,
         status: '已逾期',
-        date: '2025-03-16'
+        date: '2025-03-16',
+        expiryDate: '2026-03-16'
       }
     ];
 
@@ -904,20 +955,96 @@ export default function App() {
       ? customersData
       : customersData.filter(c => c.status === statusFilter);
 
+    const handleSelectAll = (e) => {
+      if (e.target.checked) {
+        setSelectedCustomerIds(filteredCustomers.map(c => c.id));
+      } else {
+        setSelectedCustomerIds([]);
+      }
+    };
+
+    const handleSelectOne = (id) => {
+      setSelectedCustomerIds(prev => 
+        prev.includes(id) ? prev.filter(cId => cId !== id) : [...prev, id]
+      );
+    };
+
+    const handleBatchSend = () => {
+      setEmailStatus('sending');
+      setTimeout(() => {
+        setEmailStatus('sent');
+        setTimeout(() => {
+          setEmailStatus('idle');
+          setSelectedCustomerIds([]);
+        }, 3000);
+      }, 1500);
+    };
+
+    const handleScheduleSubmit = (e) => {
+      e.preventDefault();
+      setScheduleError('');
+
+      let scheduleDisplayStr = '';
+
+      if (scheduleType === 'custom') {
+        if (!customDate || !customTime) {
+          setScheduleError('請完整填寫自訂的日期與時間！');
+          return;
+        }
+        
+        const selectedDateTime = new Date(`${customDate}T${customTime}`);
+        if (selectedDateTime <= new Date()) {
+          setScheduleError('預約發送時間必須大於目前時間！');
+          return;
+        }
+        scheduleDisplayStr = `${customDate} ${customTime}`;
+      } else {
+        const scheduleMap = {
+          'tomorrow_0900': '明天 09:00',
+          '3days_0900': '3天後 09:00',
+          '7days_0900': '7天後 09:00',
+          'nextmonth_01': '下個月1號 09:00'
+        };
+        scheduleDisplayStr = scheduleMap[quickSchedule] || '明天 09:00';
+      }
+
+      setScheduleStatus('scheduled');
+
+      setScheduledEmails(prev => {
+        const next = { ...prev };
+        selectedCustomerIds.forEach(id => {
+          next[id] = scheduleDisplayStr;
+        });
+        return next;
+      });
+
+      setTimeout(() => {
+        setShowScheduleModal(false);
+        setScheduleStatus('idle');
+        setSelectedCustomerIds([]);
+        setScheduleType('quick');
+        setCustomDate('');
+        setCustomTime('');
+      }, 1500);
+    };
+
     return (
-      <div className="flex-1 bg-slate-50 p-8 overflow-y-auto animate-in fade-in duration-300">
-        <div className="flex justify-between items-center mb-8">
+      <div className="flex-1 bg-slate-50 p-8 overflow-y-auto animate-in fade-in duration-300 relative">
+        <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-bold text-slate-800">客戶管理</h1>
-            <p className="text-slate-500 text-sm mt-1">檢視並管理所有註冊企業客戶與其訂閱狀態。</p>
+            <p className="text-slate-500 text-sm mt-1">檢視並管理所有註冊客戶的到期日與發送續約通知。</p>
           </div>
-          <div className="flex flex-col items-end space-y-3">
-            <div className="flex items-center space-x-2 w-64 justify-between bg-white px-3 py-1.5 rounded-lg border border-slate-300 shadow-sm">
-              <span className="text-sm text-slate-500 font-medium">狀態篩選</span>
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 w-56 justify-between bg-white px-3 py-1.5 rounded-lg border border-slate-300 shadow-sm">
+              <span className="text-sm text-slate-500 font-medium">狀態</span>
               <select
                 className="text-sm outline-none bg-transparent text-slate-800 cursor-pointer flex-1 text-right"
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setSelectedCustomerIds([]); // Reset selection on filter change
+                }}
               >
                 <option value="全部">全部顯示</option>
                 <option value="訂閱中">訂閱中</option>
@@ -926,38 +1053,95 @@ export default function App() {
             </div>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
-              <input type="text" placeholder="搜尋客戶/公司名稱或信箱..." className="pl-9 pr-4 py-2 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 w-64 shadow-sm" />
+              <input type="text" placeholder="搜尋公司或信箱..." className="pl-9 pr-4 py-1.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 w-56 shadow-sm" />
             </div>
           </div>
         </div>
+
+        {/* 批量操作工具列 */}
+        {selectedCustomerIds.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex justify-between items-center mb-6 shadow-sm animate-in fade-in slide-in-from-top-2">
+            <div className="text-blue-800 font-medium flex items-center">
+              <CheckCircle2 className="mr-2" size={18} />已選取 {selectedCustomerIds.length} 位客戶
+            </div>
+            <div className="flex space-x-3">
+              <button 
+                onClick={() => setShowScheduleModal(true)}
+                className="bg-white border border-blue-300 text-blue-700 hover:bg-blue-100 px-4 py-2 rounded-lg text-sm font-bold flex items-center transition-colors"
+                disabled={emailStatus === 'sending'}
+              >
+                <Clock size={16} className="mr-2" /> 預約發送 Email
+              </button>
+              <button 
+                onClick={handleBatchSend}
+                disabled={emailStatus !== 'idle'}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center transition-colors shadow-sm"
+              >
+                {emailStatus === 'idle' ? (
+                  <><Send size={16} className="mr-2" /> 一鍵群發續約通知</>
+                ) : emailStatus === 'sending' ? (
+                  '寄送中...'
+                ) : (
+                  <><CheckCircle2 size={16} className="mr-2" /> 群發成功</>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 text-slate-500 text-sm border-b border-slate-200">
-                <th className="p-4 font-medium">企業名稱 / 信箱</th>
+                <th className="p-4 w-12">
+                  <input 
+                    type="checkbox" 
+                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    onChange={handleSelectAll}
+                    checked={filteredCustomers.length > 0 && selectedCustomerIds.length === filteredCustomers.length}
+                  />
+                </th>
+                <th className="py-4 pr-4 font-medium">企業名稱 / 信箱</th>
                 <th className="p-4 font-medium">表位總數</th>
-                <th className="p-4 font-medium">年度費用</th>
+                <th className="p-4 font-medium">到期日</th>
                 <th className="p-4 font-medium">訂閱狀態</th>
                 <th className="p-4 font-medium">操作</th>
               </tr>
             </thead>
             <tbody className="text-sm">
               {filteredCustomers.length > 0 ? (
-                filteredCustomers.map((customer, idx) => (
-                  <tr key={idx} className={`border-b border-slate-100 hover:bg-slate-50 ${customer.isCurrent ? 'bg-blue-50/30' : ''}`}>
+                filteredCustomers.map((customer) => (
+                  <tr key={customer.id} className={`border-b border-slate-100 hover:bg-slate-50 transition-colors ${selectedCustomerIds.includes(customer.id) ? 'bg-blue-50/50' : customer.isCurrent ? 'bg-blue-50/10' : ''}`}>
                     <td className="p-4">
-                      <div className="font-bold text-slate-800">
+                      <input 
+                        type="checkbox" 
+                        className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                        onChange={() => handleSelectOne(customer.id)}
+                        checked={selectedCustomerIds.includes(customer.id)}
+                      />
+                    </td>
+                    <td className="py-4 pr-4">
+                      <div className="font-bold text-slate-800 flex items-center">
                         {customer.company}
-                        {customer.isCurrent && <span className="text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded ml-1">您</span>}
+                        {customer.isCurrent && <span className="text-xs bg-slate-800 text-white px-1.5 py-0.5 rounded ml-2">您</span>}
                       </div>
                       <div className="text-slate-500 text-xs mt-1">{customer.email}</div>
+                      {scheduledEmails[customer.id] && (
+                        <div className="text-blue-600 text-xs mt-1.5 flex items-center font-medium bg-blue-50 px-2 py-1 rounded inline-flex">
+                          <Clock size={12} className="mr-1" /> 已排程: {scheduledEmails[customer.id]}
+                        </div>
+                      )}
                     </td>
                     <td className="p-4 text-slate-600">
                       <div>水表: {customer.water}</div>
                       <div>電表: {customer.electricity}</div>
                     </td>
-                    <td className="p-4 text-slate-800 font-medium">${customer.cost}</td>
+                    <td className="p-4">
+                      <div className="font-medium text-slate-700 flex items-center">
+                        <CalendarDays size={14} className="mr-1.5 text-slate-400" />
+                        {customer.expiryDate}
+                      </div>
+                    </td>
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${customer.status === '已逾期' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
                         {customer.status}
@@ -967,7 +1151,7 @@ export default function App() {
                       <button onClick={() => {
                         setSelectedCustomer(customer);
                         setCurrentView('admin_customer_details');
-                      }} className="text-blue-600 hover:bg-blue-50 px-3 py-1 rounded transition-colors font-medium">
+                      }} className="text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded transition-colors font-medium border border-transparent hover:border-blue-200 text-xs">
                         詳細資料
                       </button>
                     </td>
@@ -975,7 +1159,7 @@ export default function App() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="p-8 text-center text-slate-500">
+                  <td colSpan="6" className="p-8 text-center text-slate-500">
                     目前沒有符合篩選條件的客戶。
                   </td>
                 </tr>
@@ -983,6 +1167,83 @@ export default function App() {
             </tbody>
           </table>
         </div>
+
+        {/* 預約發送 Modal */}
+        {showScheduleModal && (
+          <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-in zoom-in-95 duration-200">
+              <h2 className="text-xl font-bold text-slate-800 mb-2 flex items-center">
+                <Clock className="mr-2 text-blue-500" /> 預約群發續約通知
+              </h2>
+              <p className="text-slate-500 text-sm mb-6">您即將為 {selectedCustomerIds.length} 位客戶預訂發送續約通知信件。</p>
+              
+              <form onSubmit={handleScheduleSubmit}>
+                <div className="mb-4">
+                  <label className="flex items-center text-slate-700 text-sm font-medium mb-2 cursor-pointer">
+                    <input type="radio" name="scheduleType" value="quick" checked={scheduleType === 'quick'} onChange={() => { setScheduleType('quick'); setScheduleError(''); }} className="mr-2" />
+                    從常用清單中選擇：
+                  </label>
+                  <select 
+                    disabled={scheduleType !== 'quick'}
+                    value={quickSchedule}
+                    onChange={(e) => { setQuickSchedule(e.target.value); setScheduleError(''); }}
+                    className="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-blue-500 disabled:opacity-50 disabled:bg-slate-50"
+                  >
+                    <option value="tomorrow_0900">明天 早上 09:00</option>
+                    <option value="3days_0900">3天後 早上 09:00</option>
+                    <option value="7days_0900">7天後 早上 09:00</option>
+                    <option value="nextmonth_01">下個月 1號 早上 09:00</option>
+                  </select>
+                </div>
+                <div className="mb-6">
+                  <label className="flex items-center text-slate-700 text-sm font-medium mb-2 cursor-pointer">
+                    <input type="radio" name="scheduleType" value="custom" checked={scheduleType === 'custom'} onChange={() => { setScheduleType('custom'); setScheduleError(''); }} className="mr-2" />
+                    或自訂特定日期與時間：
+                  </label>
+                  <div className="flex space-x-3">
+                    <input 
+                      type="date" 
+                      min={new Date().toISOString().split('T')[0]}
+                      disabled={scheduleType !== 'custom'}
+                      value={customDate}
+                      onChange={(e) => { setCustomDate(e.target.value); setScheduleError(''); }}
+                      className="w-1/2 border border-slate-300 rounded-lg p-3 outline-none focus:border-blue-500 text-slate-700 disabled:opacity-50 disabled:bg-slate-50" 
+                    />
+                    <input 
+                      type="time" 
+                      disabled={scheduleType !== 'custom'}
+                      value={customTime}
+                      onChange={(e) => { setCustomTime(e.target.value); setScheduleError(''); }}
+                      className="w-1/2 border border-slate-300 rounded-lg p-3 outline-none focus:border-blue-500 text-slate-700 disabled:opacity-50 disabled:bg-slate-50" 
+                    />
+                  </div>
+                </div>
+                {scheduleError && (
+                  <div className="mb-4 text-red-500 text-sm font-medium animate-in fade-in flex items-center">
+                    <AlertCircle size={16} className="mr-1.5" />
+                    {scheduleError}
+                  </div>
+                )}
+                <div className="flex justify-end space-x-3">
+                  <button 
+                    type="button" 
+                    onClick={() => setShowScheduleModal(false)}
+                    className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors"
+                  >
+                    取消
+                  </button>
+                  <button 
+                    type="submit" 
+                    disabled={scheduleStatus === 'scheduled'}
+                    className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-colors shadow-sm min-w-[120px]"
+                  >
+                    {scheduleStatus === 'scheduled' ? '已預約！' : '確認預約'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -1026,8 +1287,8 @@ export default function App() {
           <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
             <h2 className="text-lg font-bold text-slate-800 mb-4 border-b pb-2">財務與方案</h2>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-slate-600 flex items-center"><CreditCard size={18} className="mr-2 text-slate-400" />年度總金額</span>
-              <span className="font-bold text-blue-600">${selectedCustomer.cost}</span>
+              <span className="text-slate-600 flex items-center"><CreditCard size={18} className="mr-2 text-slate-400" />年度總金額 (含銷售稅)</span>
+              <span className="font-bold text-blue-600">${(selectedCustomer.cost * (1 + taxRate)).toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center mb-4">
               <span className="text-slate-600 flex items-center"><CalendarDays size={18} className="mr-2 text-slate-400" />上次付款日</span>
@@ -1073,11 +1334,65 @@ export default function App() {
               <tr className="border-b border-slate-100">
                 <td className="p-4 text-slate-800">{selectedCustomer.date || '2026-03-16'}</td>
                 <td className="p-4 text-slate-600">系統授權費 (水表 x{selectedCustomer.water}, 電表 x{selectedCustomer.electricity})</td>
-                <td className="p-4 text-slate-800 font-medium">${selectedCustomer.cost}</td>
+                <td className="p-4 text-slate-800 font-medium">${(selectedCustomer.cost * (1 + taxRate)).toFixed(2)}</td>
                 <td className="p-4"><span className="text-green-600 font-medium">成功</span></td>
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    );
+  };
+
+  const AdminSettingsView = () => {
+    const [localTaxRate, setLocalTaxRate] = useState(taxRate * 100);
+    const [savedStatus, setSavedStatus] = useState(false);
+
+    const handleSave = () => {
+      setTaxRate(localTaxRate / 100);
+      setSavedStatus(true);
+      setTimeout(() => setSavedStatus(false), 2000);
+    };
+
+    return (
+      <div className="flex-1 bg-slate-50 p-8 overflow-y-auto animate-in fade-in duration-300">
+        <div className="max-w-2xl">
+          <h1 className="text-2xl font-bold text-slate-800 mb-2">系統設定</h1>
+          <p className="text-slate-500 text-sm mb-8">管理全域系統變數與商業邏輯設定。</p>
+
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
+            <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center">
+              <Calculator className="mr-2 text-slate-400" size={20} /> 帳單與稅務設定
+            </h2>
+            <div className="mb-4">
+              <label className="block text-slate-700 font-medium mb-2">全域銷售稅率 (Sales Tax Rate)</label>
+              <div className="flex items-center">
+                <input 
+                  type="number" 
+                  step="0.1" 
+                  min="0" 
+                  max="100"
+                  value={localTaxRate}
+                  onChange={(e) => setLocalTaxRate(parseFloat(e.target.value) || 0)}
+                  className="w-32 border border-slate-300 rounded-lg p-2.5 outline-none focus:border-blue-500 text-right font-bold text-slate-700" 
+                />
+                <span className="ml-2 text-slate-500 font-bold">%</span>
+              </div>
+              <p className="text-sm text-slate-400 mt-2">此稅率將自動套用於前台所有新增訂單、手動續約與表位擴充結帳中。</p>
+            </div>
+            
+            <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+              <div className="text-sm text-green-600 font-medium">
+                {savedStatus && <span className="flex items-center"><CheckCircle2 size={16} className="mr-1" /> 設定已儲存</span>}
+              </div>
+              <button 
+                onClick={handleSave}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold shadow-sm transition-colors"
+              >
+                儲存設定
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -1091,6 +1406,7 @@ export default function App() {
         {currentView === 'admin_dashboard' && <AdminDashboardView />}
         {currentView === 'admin_customers' && <AdminCustomersView />}
         {currentView === 'admin_customer_details' && <AdminCustomerDetailsView />}
+        {currentView === 'admin_settings' && <AdminSettingsView />}
       </div>
     );
   }
