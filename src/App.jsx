@@ -24,7 +24,8 @@ import {
   AlertCircle,
   CalendarDays,
   Send,
-  Clock
+  Clock,
+  X
 } from 'lucide-react';
 
 const PRICES = {
@@ -51,6 +52,31 @@ export default function App() {
   const [customerInfo, setCustomerInfo] = useState({ company: '', email: '', password: '' });
   const [taxRate, setTaxRate] = useState(0.05);
 
+  const [customersList, setCustomersList] = useState([
+    {
+      id: 'c2',
+      company: 'Texas Real Estate LLC',
+      email: 'admin@texasre.com',
+      water: 150,
+      electricity: 200,
+      cost: 4800,
+      status: '訂閱中',
+      date: '2026-03-16',
+      expiryDate: '2027-03-16'
+    },
+    {
+      id: 'c3',
+      company: 'Florida Housing',
+      email: 'ops@floridahousing.org',
+      water: 85,
+      electricity: 0,
+      cost: 1020,
+      status: '已逾期',
+      date: '2025-03-16',
+      expiryDate: '2026-03-16'
+    }
+  ]);
+
   const totalCost = (meters.water * PRICES.water) + (meters.electricity * PRICES.electricity);
 
   const handleProceedToCheckout = (e) => {
@@ -73,6 +99,24 @@ export default function App() {
 
   const handleLogin = (e) => {
     e.preventDefault();
+    
+    // 檢查是否有待付款客戶
+    const existingCustomer = customersList.find(c => c.email === customerInfo.email);
+    
+    if (existingCustomer && existingCustomer.status === '待付款') {
+      setIsLoggedIn(true);
+      setCustomerInfo(prev => ({ ...prev, company: existingCustomer.company }));
+      setMeters({ water: existingCustomer.water, electricity: existingCustomer.electricity });
+      setPendingOrder({ 
+        type: 'initial', 
+        water: existingCustomer.water, 
+        electricity: existingCustomer.electricity, 
+        cost: existingCustomer.cost 
+      });
+      setCurrentView('checkout');
+      return;
+    }
+
     setIsLoggedIn(true);
     if (!customerInfo.company) {
       setCustomerInfo({ ...customerInfo, company: '測試公司' });
@@ -83,23 +127,56 @@ export default function App() {
     setCurrentView('client_dashboard');
   };
 
+  const handlePaymentSuccess = () => {
+    if (pendingOrder?.type === 'expand') {
+      setMeters(prev => ({
+        water: prev.water + pendingOrder.water,
+        electricity: prev.electricity + pendingOrder.electricity
+      }));
+      setPendingOrder(null);
+    } else if (pendingOrder?.type === 'renew') {
+      setMeters({ water: pendingOrder.water, electricity: pendingOrder.electricity });
+      setPendingOrder(null);
+    } else if (pendingOrder?.type === 'initial') {
+      const todayStr = new Date().toISOString().split('T')[0];
+      const nextYear = new Date();
+      nextYear.setFullYear(nextYear.getFullYear() + 1);
+      const expiryStr = nextYear.toISOString().split('T')[0];
+      
+      setCustomersList(prev => {
+        const isExisting = prev.find(c => c.email === customerInfo.email);
+        if (isExisting) {
+           return prev.map(c => 
+             c.email === customerInfo.email 
+               ? { ...c, status: '訂閱中', date: todayStr, expiryDate: expiryStr, isCurrent: true, cost: pendingOrder.cost }
+               : c
+           );
+        } else {
+           return [{
+              id: 'c' + Date.now(),
+              company: customerInfo.company || '測試公司',
+              email: customerInfo.email || '未提供',
+              water: pendingOrder.water,
+              electricity: pendingOrder.electricity,
+              cost: pendingOrder.cost,
+              status: '訂閱中',
+              date: todayStr,
+              expiryDate: expiryStr,
+              isCurrent: true
+           }, ...prev];
+        }
+      });
+    }
+    setCurrentView('success');
+    setIsCardFormOpen(false); // 付款成功後重置
+  };
+
   const simulatePayment = (type) => {
     setPaymentType(type);
     if (type === 'credit_card') {
       // 站內信用卡付款，顯示等待效果
       setTimeout(() => {
-        if (pendingOrder?.type === 'expand') {
-          setMeters(prev => ({
-            water: prev.water + pendingOrder.water,
-            electricity: prev.electricity + pendingOrder.electricity
-          }));
-          setPendingOrder(null);
-        } else if (pendingOrder?.type === 'renew') {
-          setMeters({ water: pendingOrder.water, electricity: pendingOrder.electricity });
-          setPendingOrder(null);
-        }
-        setCurrentView('success');
-        setIsCardFormOpen(false); // 付款成功後重置
+        handlePaymentSuccess();
       }, 1500);
     } else {
       // 模擬跳轉至 PayPal 外部網站
@@ -922,46 +999,13 @@ export default function App() {
     const [scheduleError, setScheduleError] = useState('');
     const [scheduledEmails, setScheduledEmails] = useState({});
 
-    const customersData = [
-      ...(isLoggedIn ? [{
-        id: 'c1',
-        company: customerInfo.company || '測試公司',
-        email: customerInfo.email || '未提供',
-        water: meters.water,
-        electricity: meters.electricity,
-        cost: totalCost,
-        status: '訂閱中',
-        date: 'Just Now',
-        expiryDate: '2027-04-16',
-        isCurrent: true
-      }] : []),
-      {
-        id: 'c2',
-        company: 'Texas Real Estate LLC',
-        email: 'admin@texasre.com',
-        water: 150,
-        electricity: 200,
-        cost: 4800,
-        status: '訂閱中',
-        date: '2026-03-16',
-        expiryDate: '2027-03-16'
-      },
-      {
-        id: 'c3',
-        company: 'Florida Housing',
-        email: 'ops@floridahousing.org',
-        water: 85,
-        electricity: 0,
-        cost: 1020,
-        status: '已逾期',
-        date: '2025-03-16',
-        expiryDate: '2026-03-16'
-      }
-    ];
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [newCustomer, setNewCustomer] = useState({ company: '', email: '', password: 'CloudMeter2026', water: '', electricity: '' });
+    const [addError, setAddError] = useState('');
 
     const filteredCustomers = statusFilter === '全部'
-      ? customersData
-      : customersData.filter(c => c.status === statusFilter);
+      ? customersList
+      : customersList.filter(c => c.status === statusFilter);
 
     const handleSelectAll = (e) => {
       if (e.target.checked) {
@@ -1036,6 +1080,57 @@ export default function App() {
       }, 1500);
     };
 
+    const handleAddCustomer = (e) => {
+      e.preventDefault();
+      setAddError('');
+
+      if (!newCustomer.company || !newCustomer.email || !newCustomer.password || newCustomer.water === '' || newCustomer.electricity === '') {
+        setAddError('請填寫所有欄位');
+        return;
+      }
+
+      const water = parseInt(newCustomer.water);
+      const electricity = parseInt(newCustomer.electricity);
+
+      if (isNaN(water) || isNaN(electricity) || water < 0 || electricity < 0) {
+        setAddError('表位數量必須是有效的正整數');
+        return;
+      }
+
+      if (customersList.some(c => c.email === newCustomer.email)) {
+        setAddError('此信箱已被其他企業註冊');
+        return;
+      }
+
+      const cost = (water * PRICES.water) + (electricity * PRICES.electricity);
+      
+      setCustomersList(prev => [{
+        id: 'c' + Date.now(),
+        company: newCustomer.company,
+        email: newCustomer.email,
+        water,
+        electricity,
+        cost,
+        status: '待付款',
+        date: '-',
+        expiryDate: '-'
+      }, ...prev]);
+
+      setShowAddModal(false);
+      
+      setTimeout(() => {
+        if (window.confirm(`${newCustomer.company} 建檔完成！\n狀態為「待付款」。是否立即寄送付款連結與續約通知 Email 給該客戶？`)) {
+          setEmailStatus('sending');
+          setTimeout(() => {
+            setEmailStatus('sent');
+            setTimeout(() => setEmailStatus('idle'), 3000);
+          }, 1500);
+        }
+        setNewCustomer({ company: '', email: '', password: 'CloudMeter2026', water: '', electricity: '' });
+      }, 100);
+    };
+
+
     return (
       <div className="flex-1 bg-slate-50 p-8 overflow-y-auto animate-in fade-in duration-300 relative">
         <div className="flex justify-between items-center mb-6">
@@ -1063,6 +1158,12 @@ export default function App() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={16} />
               <input type="text" placeholder="搜尋公司或信箱..." className="pl-9 pr-4 py-1.5 border border-slate-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 w-56 shadow-sm" />
             </div>
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 ml-3 rounded-lg text-sm font-medium transition-colors shadow-sm"
+            >
+              + 手動新建客戶
+            </button>
           </div>
         </div>
 
@@ -1151,7 +1252,7 @@ export default function App() {
                       </div>
                     </td>
                     <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${customer.status === '已逾期' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${customer.status === '已逾期' ? 'bg-red-100 text-red-700' : customer.status === '待付款' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>
                         {customer.status}
                       </span>
                     </td>
@@ -1252,6 +1353,69 @@ export default function App() {
             </div>
           </div>
         )}
+
+        {/* 新增客戶 Modal */}
+        {showAddModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h3 className="text-xl font-bold text-slate-800 flex items-center">
+                  <span className="bg-blue-100 text-blue-600 p-1.5 rounded-lg mr-3">
+                    <Building2 size={20} />
+                  </span>
+                  手動新建客戶建檔
+                </h3>
+                <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-200 transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <form onSubmit={handleAddCustomer} className="p-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">企業名稱</label>
+                    <input type="text" value={newCustomer.company} onChange={(e) => setNewCustomer({...newCustomer, company: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-blue-500" placeholder="例如：Texas Real Estate LLC" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">聯絡信箱 (登入帳號)</label>
+                    <input type="email" value={newCustomer.email} onChange={(e) => setNewCustomer({...newCustomer, email: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-blue-500" placeholder="admin@example.com" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">預設登入密碼</label>
+                    <input type="text" value={newCustomer.password} onChange={(e) => setNewCustomer({...newCustomer, password: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-blue-500 font-mono text-slate-600 bg-slate-50" placeholder="預設密碼" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">水表授權數量</label>
+                      <input type="number" min="0" value={newCustomer.water} onChange={(e) => setNewCustomer({...newCustomer, water: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-blue-500" placeholder="0" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">電表授權數量</label>
+                      <input type="number" min="0" value={newCustomer.electricity} onChange={(e) => setNewCustomer({...newCustomer, electricity: e.target.value})} className="w-full border border-slate-300 rounded-lg p-3 outline-none focus:border-blue-500" placeholder="0" />
+                    </div>
+                  </div>
+                </div>
+
+                {addError && (
+                  <div className="mt-4 text-red-500 text-sm font-medium animate-in fade-in flex items-center">
+                    <AlertCircle size={16} className="mr-1.5" />
+                    {addError}
+                  </div>
+                )}
+
+                <div className="mt-8 flex justify-end space-x-3">
+                  <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg font-medium transition-colors">
+                    取消
+                  </button>
+                  <button type="submit" className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold transition-colors shadow-sm">
+                    建立並儲存
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
       </div>
     );
   };
